@@ -3,12 +3,11 @@ package tests
 import (
 	"bytes"
 	"encoding/json"
-	"fmt"
 	"io"
 	"net/http/httptest"
 	"testing"
 
-	validgo "github.com/MRizki28/validgo"
+	"github.com/MRizki28/validgo"
 	"github.com/gofiber/fiber/v2"
 )
 
@@ -18,14 +17,29 @@ type RegisterRequest struct {
 }
 
 func TestValidationFailed(t *testing.T) {
-
 	app := fiber.New()
 
 	app.Post("/register", func(c *fiber.Ctx) error {
-
 		_, err := validgo.Parse[RegisterRequest](c)
+		
+		if err != nil {
+			if valErr, ok := err.(*validgo.ValidationError); ok {
+				return c.Status(fiber.StatusUnprocessableEntity).JSON(fiber.Map{
+					"status":  false,
+					"message": "validation failed",
+					"errors":  valErr.Errors,
+				})
+			}
+			
+			return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+				"status":  false,
+				"message": err.Error(),
+			})
+		}
 
-		return err
+		return c.Status(200).JSON(fiber.Map{
+			"message": "success",
+		})
 	})
 
 	body := map[string]any{
@@ -41,10 +55,7 @@ func TestValidationFailed(t *testing.T) {
 		bytes.NewReader(jsonBody),
 	)
 
-	req.Header.Set(
-		"Content-Type",
-		"application/json",
-	)
+	req.Header.Set("Content-Type", "application/json")
 
 	resp, err := app.Test(req)
 
@@ -54,12 +65,21 @@ func TestValidationFailed(t *testing.T) {
 
 	responseBody, _ := io.ReadAll(resp.Body)
 
-	fmt.Println(string(responseBody))
+	// Parse response untuk validasi lebih detail
+	var response map[string]any
+	json.Unmarshal(responseBody, &response)
+
+	t.Logf("Response: %+v", response)
 
 	if resp.StatusCode != 422 {
-		t.Errorf(
-			"expected status 422 got %d",
-			resp.StatusCode,
-		)
+		t.Errorf("expected status 422 got %d", resp.StatusCode)
+	}
+
+	if response["status"] != false {
+		t.Error("expected status false")
+	}
+
+	if response["errors"] == nil {
+		t.Error("expected errors field to be present")
 	}
 }

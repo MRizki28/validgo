@@ -18,6 +18,21 @@ func main() {
 		func(c *fiber.Ctx) error {
 			body, err := validgo.Parse[RegisterRequest](c)
 			if err != nil {
+				if c.BodyParser(&body) != nil {
+					return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+						"status":  false,
+						"message": "invalid request body",
+					})
+				}
+
+				if valErr, ok := err.(*validgo.ValidationError); ok {
+					return c.Status(fiber.StatusUnprocessableEntity).JSON(fiber.Map{
+						"status":  false,
+						"message": "validation failed",
+						"errors":  valErr.Errors,
+					})
+				}
+
 				return err
 			}
 
