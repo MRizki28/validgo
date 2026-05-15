@@ -13,20 +13,31 @@ type RegisterRequest struct {
 func main() {
 	app := fiber.New()
 
-	app.Post(
-		"/register",
-		func(c *fiber.Ctx) error {
-			body, err := validgo.Parse[RegisterRequest](c)
-			if err != nil {
-				return err
+	app.Post("/register", func(c *fiber.Ctx) error {
+
+		body, err := validgo.Parse[RegisterRequest](c)
+
+		if err != nil {
+
+			if ve, ok := err.(validgo.ValidationError); ok {
+				return c.Status(422).JSON(fiber.Map{
+					"status":  false,
+					"message": "validation failed",
+					"errors":  ve.Errors,
+				})
 			}
 
-			return c.JSON(fiber.Map{
-				"status": true,
-				"data":   body,
+			return c.Status(400).JSON(fiber.Map{
+				"status":  false,
+				"message": err.Error(),
 			})
-		},
-	)
+		}
+
+		return c.Status(200).JSON(fiber.Map{
+			"status": true,
+			"data":   body,
+		})
+	})
 
 	app.Listen(":3000")
 }

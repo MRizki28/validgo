@@ -24,8 +24,24 @@ func TestValidationFailed(t *testing.T) {
 	app.Post("/register", func(c *fiber.Ctx) error {
 
 		_, err := validgo.Parse[RegisterRequest](c)
+		if err != nil {
+			if ve, ok := err.(validgo.ValidationError); ok {
+				return c.Status(422).JSON(fiber.Map{
+					"status":  false,
+					"message": "validation failed",
+					"errors":  ve.Errors,
+				})
+			}
 
-		return err
+			return c.Status(400).JSON(fiber.Map{
+				"status":  false,
+				"message": err.Error(),
+			})
+		}
+
+		return c.Status(200).JSON(fiber.Map{
+			"status": true,
+		})
 	})
 
 	body := map[string]any{
@@ -41,25 +57,17 @@ func TestValidationFailed(t *testing.T) {
 		bytes.NewReader(jsonBody),
 	)
 
-	req.Header.Set(
-		"Content-Type",
-		"application/json",
-	)
+	req.Header.Set("Content-Type", "application/json")
 
 	resp, err := app.Test(req)
-
 	if err != nil {
 		t.Fatal(err)
 	}
 
 	responseBody, _ := io.ReadAll(resp.Body)
-
 	fmt.Println(string(responseBody))
 
 	if resp.StatusCode != 422 {
-		t.Errorf(
-			"expected status 422 got %d",
-			resp.StatusCode,
-		)
+		t.Errorf("expected status 422 got %d", resp.StatusCode)
 	}
 }
