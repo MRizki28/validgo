@@ -4,7 +4,7 @@
 ![License](https://img.shields.io/badge/license-MIT-green)
 ![Status](https://img.shields.io/badge/status-active-success)
 
-Laravel-style validation for Go Fiber.
+Validation for Golang.
 
 `validgo` helps simplify request parsing and validation in Go by wrapping `go-playground/validator` with a cleaner developer experience.
 
