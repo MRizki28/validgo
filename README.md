@@ -43,7 +43,7 @@ type RegisterRequest struct {
 
 ---
 
-## Handler
+## Example
 
 ```go
 package main
@@ -57,9 +57,21 @@ func Register(c *fiber.Ctx) error {
 
     body, err := validgo.Parse[RegisterRequest](c)
 
-    if err != nil {
-        return err
-    }
+    	if err != nil {
+			if valErr, ok := err.(*validgo.ValidationError); ok {
+				return c.Status(fiber.StatusUnprocessableEntity).JSON(fiber.Map{
+					"status":  false,
+					"message": "validation failed",
+					"errors":  valErr.Errors,
+				})
+			}
+			
+			return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+				"status":  false,
+				"message": err.Error(),
+			})
+		}
+
 
     return c.JSON(fiber.Map{
         "status": true,
@@ -70,13 +82,6 @@ func Register(c *fiber.Ctx) error {
 
 ---
 
-## Route
-
-```go
-app.Post("/register", Register)
-```
-
----
 
 # Validation Error Response
 
