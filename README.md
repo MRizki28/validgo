@@ -49,7 +49,7 @@ type RegisterRequest struct {
 package main
 
 import (
-    validgo "github.com/MRizki28/validgo"
+    "github.com/MRizki28/validgo"
     "github.com/gofiber/fiber/v2"
 )
 
