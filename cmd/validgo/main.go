@@ -1,29 +1,92 @@
-package main
+package generator
 
 import (
 	"fmt"
 	"os"
-
-	"github.com/MRizki28/validgo/generator"
+	"path/filepath"
+	"strings"
 )
 
-func main() {
-	args := os.Args
+func MakeRequest(name string) {
 
-	if len(args) < 3 {
-		fmt.Println("usage: validgo make:request RegisterUser")
+	basePath := getRequestPath()
+
+	name = strings.ReplaceAll(name, "\\", "/")
+
+	parts := strings.Split(name, "/")
+
+	className := parts[len(parts)-1]
+
+	fileName := toSnakeCase(className) + "_request.go"
+
+	var folders []string
+
+	if len(parts) > 1 {
+		for _, part := range parts[:len(parts)-1] {
+			folders = append(folders, toSnakeCase(part))
+		}
+	}
+
+	fullDir := filepath.Join(
+		append([]string{basePath}, folders...)...,
+	)
+
+	fullPath := filepath.Join(fullDir, fileName)
+
+	content := fmt.Sprintf(`package requests
+
+type %sRequest struct {
+
+}
+`, className)
+
+	err := os.MkdirAll(fullDir, os.ModePerm)
+
+	if err != nil {
+		fmt.Println("failed create directory")
 		return
 	}
 
-	command := args[1]
-	name := args[2]
+	err = os.WriteFile(
+		fullPath,
+		[]byte(content),
+		0644,
+	)
 
-	switch command {
+	if err != nil {
 
-	case "make:request":
-		generator.MakeRequest(name)
+		os.RemoveAll(fullDir)
 
-	default:
-		fmt.Println("command not found")
+		fmt.Println("failed create request")
+		return
 	}
+
+	fmt.Println("request created:", fullPath)
+}
+
+func getRequestPath() string {
+
+	_, err := os.Stat("app")
+
+	if err == nil {
+		return "app/requests"
+	}
+
+	return "requests"
+}
+
+func toSnakeCase(str string) string {
+
+	var result strings.Builder
+
+	for i, r := range str {
+
+		if i > 0 && r >= 'A' && r <= 'Z' {
+			result.WriteRune('_')
+		}
+
+		result.WriteRune(r)
+	}
+
+	return strings.ToLower(result.String())
 }
