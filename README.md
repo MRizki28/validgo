@@ -25,6 +25,31 @@ Validation for Golang.
 go get github.com/MRizki28/validgo
 ```
 
+Install validgo CLI:
+
+```bash
+go install github.com/MRizki28/validgo/cmd/validgo@latest
+```
+
+Make sure your Go binary path is added to PATH:
+
+```bash
+export PATH=$PATH:$(go env GOPATH)/bin
+```
+# CLI Commands
+
+## Generate Request
+
+```bash
+validgo make:request RegisterUser
+```
+
+Generated file:
+
+```bash
+app/requests/register_user_request.go
+```
+
 ---
 
 # Quick Start
