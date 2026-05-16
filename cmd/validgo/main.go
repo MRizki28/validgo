@@ -1,4 +1,4 @@
-package main
+package generator
 
 import (
 	"fmt"
@@ -7,8 +7,8 @@ import (
 	"strings"
 )
 
-func MakeRequest(name string) {
-
+func main() {
+	name := os.Args[1]
 	basePath := getRequestPath()
 
 	name = strings.ReplaceAll(name, "\\", "/")
