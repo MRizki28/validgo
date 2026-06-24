@@ -20,27 +20,36 @@ func TestValidationFailed(t *testing.T) {
 	app := fiber.New()
 
 	app.Post("/register", func(c *fiber.Ctx) error {
-		_, err := validgo.Parse[RegisterRequest](c)
-		
-		if err != nil {
-			if valErr, ok := err.(*validgo.ValidationError); ok {
-				return c.Status(fiber.StatusUnprocessableEntity).JSON(fiber.Map{
-					"status":  false,
-					"message": "validation failed",
-					"errors":  valErr.Errors,
-				})
-			}
-			
-			return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+	var body RegisterRequest
+
+	if err := c.BodyParser(&body); err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"status":  false,
+			"message": err.Error(),
+		})
+	}
+
+	err := validgo.Validate(body)
+
+	if err != nil {
+		if valErr, ok := err.(*validgo.ValidationError); ok {
+			return c.Status(fiber.StatusUnprocessableEntity).JSON(fiber.Map{
 				"status":  false,
-				"message": err.Error(),
+				"message": "validation failed",
+				"errors":  valErr.Errors,
 			})
 		}
 
-		return c.Status(200).JSON(fiber.Map{
-			"message": "success",
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"status":  false,
+			"message": err.Error(),
 		})
+	}
+
+	return c.Status(200).JSON(fiber.Map{
+		"message": "success",
 	})
+})
 
 	body := map[string]any{
 		"name":  "",

@@ -1,123 +1,123 @@
-package main
+	package main
 
-import (
-	"fmt"
-	"os"
-	"path/filepath"
-	"strings"
-)
+	import (
+		"fmt"
+		"os"
+		"path/filepath"
+		"strings"
+	)
 
-func main() {
+	func main() {
 
-	if len(os.Args) < 3 {
-		fmt.Println("usage: validgo make:request User/Test")
-		return
-	}
+		if len(os.Args) < 3 {
+			fmt.Println("usage: validgo make:request User/Test")
+			return
+		}
 
-	command := os.Args[1]
-	name := os.Args[2]
+		command := os.Args[1]
+		name := os.Args[2]
 
-	switch command {
+		switch command {
 
-	case "make:request":
-		makeRequest(name)
+		case "make:request":
+			makeRequest(name)
 
-	default:
-		fmt.Println("command not found")
-	}
-}
-
-func makeRequest(name string) {
-
-	basePath := getRequestPath()
-
-	name = strings.ReplaceAll(name, "\\", "/")
-
-	parts := strings.Split(name, "/")
-
-	className := parts[len(parts)-1]
-
-	fileName := toSnakeCase(className) + "_request.go"
-
-	var folders []string
-
-	if len(parts) > 1 {
-
-		for _, part := range parts[:len(parts)-1] {
-			folders = append(folders, toSnakeCase(part))
+		default:
+			fmt.Println("command not found")
 		}
 	}
 
-	fullDir := filepath.Join(
-		append([]string{basePath}, folders...)...,
-	)
+	func makeRequest(name string) {
 
-	fullPath := filepath.Join(fullDir, fileName)
+		basePath := getRequestPath()
 
-	packageName := "requests"
+		name = strings.ReplaceAll(name, "\\", "/")
 
-	if len(folders) > 0 {
-		packageName = folders[len(folders)-1]
-	}
+		parts := strings.Split(name, "/")
 
-	content := fmt.Sprintf(`package %s
+		className := parts[len(parts)-1]
 
-type %sRequest struct {
+		fileName := toSnakeCase(className) + "_request.go"
 
-}
-`, packageName, className)
+		var folders []string
 
-	err := os.MkdirAll(fullDir, os.ModePerm)
+		if len(parts) > 1 {
 
-	if err != nil {
-		fmt.Println("failed create directory")
-		return
-	}
-
-	_, err = os.Stat(fullPath)
-
-	if err == nil {
-		fmt.Println("request already exists")
-		return
-	}
-
-	err = os.WriteFile(
-		fullPath,
-		[]byte(content),
-		0644,
-	)
-
-	if err != nil {
-		fmt.Println("failed create request")
-		return
-	}
-
-	fmt.Println("request created:", fullPath)
-}
-
-func getRequestPath() string {
-
-	_, err := os.Stat("app")
-
-	if err == nil {
-		return "app/requests"
-	}
-
-	return "requests"
-}
-
-func toSnakeCase(str string) string {
-
-	var result strings.Builder
-
-	for i, r := range str {
-
-		if i > 0 && r >= 'A' && r <= 'Z' {
-			result.WriteRune('_')
+			for _, part := range parts[:len(parts)-1] {
+				folders = append(folders, toSnakeCase(part))
+			}
 		}
 
-		result.WriteRune(r)
+		fullDir := filepath.Join(
+			append([]string{basePath}, folders...)...,
+		)
+
+		fullPath := filepath.Join(fullDir, fileName)
+
+		packageName := "requests"
+
+		if len(folders) > 0 {
+			packageName = folders[len(folders)-1]
+		}
+
+		content := fmt.Sprintf(`package %s
+
+	type %sRequest struct {
+
+	}
+	`, packageName, className)
+
+		err := os.MkdirAll(fullDir, os.ModePerm)
+
+		if err != nil {
+			fmt.Println("failed create directory")
+			return
+		}
+
+		_, err = os.Stat(fullPath)
+
+		if err == nil {
+			fmt.Println("request already exists")
+			return
+		}
+
+		err = os.WriteFile(
+			fullPath,
+			[]byte(content),
+			0644,
+		)
+
+		if err != nil {
+			fmt.Println("failed create request")
+			return
+		}
+
+		fmt.Println("request created:", fullPath)
 	}
 
-	return strings.ToLower(result.String())
-}
+	func getRequestPath() string {
+
+		_, err := os.Stat("app")
+
+		if err == nil {
+			return "app/requests"
+		}
+
+		return "requests"
+	}
+
+	func toSnakeCase(str string) string {
+
+		var result strings.Builder
+
+		for i, r := range str {
+
+			if i > 0 && r >= 'A' && r <= 'Z' {
+				result.WriteRune('_')
+			}
+
+			result.WriteRune(r)
+		}
+
+		return strings.ToLower(result.String())
+	}

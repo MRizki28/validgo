@@ -1,31 +1,22 @@
 package validgo
 
-import (
-	"github.com/MRizki28/validgo/validator"
-	"github.com/gofiber/fiber/v2"
-)
+import "github.com/MRizki28/validgo/validator"
 
 type ValidationError struct {
 	Errors interface{}
 }
 
-func (e *ValidationError) Error() string {
-	return "validation failed"
+func(e *ValidationError) Error() string {
+	return "Validation Error"
 }
 
-func Parse[T any](c *fiber.Ctx) (T, error) {
-	var body T
-
-	if err := c.BodyParser(&body); err != nil {
-		return body, err
-	}
-
+func Validate[T any](data T) error {
 	v := validator.New()
-	errors := v.Validate(body)
+	errors := v.Validate(data)
 
 	if errors != nil {
-		return body, &ValidationError{Errors: errors}
+		return &ValidationError{Errors: errors}
 	}
 
-	return body, nil
+	return nil
 }
