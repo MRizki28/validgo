@@ -16,15 +16,16 @@ func main() {
 	app.Post(
 		"/register",
 		func(c *fiber.Ctx) error {
-			body, err := validgo.Parse[RegisterRequest](c)
-			if err != nil {
-				if c.BodyParser(&body) != nil {
-					return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-						"status":  false,
-						"message": "invalid request body",
-					})
-				}
+			var body RegisterRequest
 
+			if err := c.BodyParser(&body); err != nil {
+				return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+					"status":  false,
+					"message": err.Error(),
+				})
+			}
+
+			if err := validgo.Validate(body); err != nil {
 				if valErr, ok := err.(*validgo.ValidationError); ok {
 					return c.Status(fiber.StatusUnprocessableEntity).JSON(fiber.Map{
 						"status":  false,
@@ -33,12 +34,14 @@ func main() {
 					})
 				}
 
-				return err
+				return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+					"status":  false,
+					"message": err.Error(),
+				})
 			}
 
-			return c.JSON(fiber.Map{
-				"status": true,
-				"data":   body,
+			return c.Status(200).JSON(fiber.Map{
+				"message": "success",
 			})
 		},
 	)
